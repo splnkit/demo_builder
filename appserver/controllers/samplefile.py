@@ -21,32 +21,44 @@ appsDir = util.get_apps_dir()
 class Samplefile(controllers.BaseController):
     ''' Samplefile Controller '''
 
-    @route('/:id/:action')
+    @route('/:app/:id/:action')
     @expose_page(must_login=True, methods=['GET'])
-    def get(self, id='', action='get', **kwargs):
+    def get(self, app='', id='', action='get', **kwargs):
         '''Return list of files in "samples" directory'''
-        pass
+        file_path = os.path.join(appsDir, app, "samples", id)
+        rsp_dict = {}
+        rsp_dict["app"] = app
+        rsp_dict["filename"] = id
+        rsp_dict["content"] = open(file_path, "r").read()
+        cherrypy.response.headers['Content-Type'] = 'text/json'
+        return json.dumps(rsp_dict)
 
-    @route('/:action')
+    @route('/:app/:action=list')
     @expose_page(must_login=True, methods=['GET'])
-    def list(self, id='', action='list', **kwargs):
+    def list(self, app='', action='list', **kwargs):
         '''Return list of files in "samples" directory'''
-        pass
+        rsp_dict = {}     # os.listdir()
+        rsp_dict["app"] = app
+        app_dir = os.path.join(appsDir, app, "samples")
+        filename_list = [
+            filename for filename in os.listdir(app_dir) if os.path.isfile(os.path.join(app_dir, filename))
+        ]
+        rsp_dict["files"] = filename_list
+        cherrypy.response.headers['Content-Type'] = 'text/json'
+        return json.dumps(rsp_dict)
 
-    @route('/:id/:action')
-    @expose_page(must_login=True, methods=['POST'])
-    def save(self, id='', action='save', **kwargs):
+    @route('/:app/:id/:action')
+    @expose_page(must_login=True, methods=['POST', 'PUT'])
+    def save(self, app='', id='', action='save', **kwargs):
         '''Update a file in the "samples" directory'''
-        pass
+        file_path = os.path.join(appsDir, app, "samples", id)
+        open(file_path, "w").write(kwargs["contents"])
+        return json.dumps({"Status": 200, "Message": "File written."})
 
-    @route('/:id/:action')
-    @expose_page(must_login=True, methods=['POST'])
-    def create(self, id='', action='get', **kwargs):
-        '''Create a file in the "samples" directory'''
-        pass
-
-    @route('/:id/:action')
+    @route('/:app/:id/:action')
     @expose_page(must_login=True, methods=['DELETE'])
-    def delete(self, id='', action='get', **kwargs):
+    def delete(self, app='', id='', action='delete', **kwargs):
         '''Delete a file from the "samples" directory'''
-        pass
+        file_path = os.path.join(appsDir, app, "samples", id)
+        os.remove(file_path)
+        return json.dumps({"Status": 200, "Message": "File deleted."})

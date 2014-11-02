@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import cherrypy
+import splunk
 from splunk.search import *
 import splunk.appserver.mrsparkle.controllers as controllers
 import splunk.appserver.mrsparkle.lib.util as util
@@ -21,32 +22,61 @@ appsDir = util.get_apps_dir()
 class Eventgen(controllers.BaseController):
     ''' Eventgens Controller '''
 
-    @route('/:id/:action')
+    @route('/:app/:id/:action')
     @expose_page(must_login=True, methods=['GET'])
-    def get(self, id='', action='get', **kwargs):
+    def get(self, app='', id='', action='get', **kwargs):
         '''Return list of eventgen configs'''
-        pass
+        session_key = cherrypy.session.get('sessionKey')
+        args = kwargs
+        args['output_mode'] = 'json'
+        serverResponse, serverContent = splunk.rest.simpleRequest('/services/eventgen/eventgen_conf/%s' % id, sessionKey=session_key, getargs=args)
+        cherrypy.response.headers['Content-Type'] = 'text/json'
+        content = json.loads(serverContent)["entry"][0]["content"]
+        return json.dumps(content)
 
-    @route('/:action')
+    @route('/:app/:action=list')
     @expose_page(must_login=True, methods=['GET'])
-    def list(self, id='', action='list', **kwargs):
+    def default(self, app='', **kwargs):
         '''Return list of eventgen configs'''
-        pass
+        session_key = cherrypy.session.get('sessionKey')
+        args = {}
+        args['output_mode'] = 'json'
+        serverResponse, serverContent = splunk.rest.simpleRequest('/services/eventgen/eventgen_conf', sessionKey=session_key, getargs=args)
+        cherrypy.response.headers['Content-Type'] = 'text/json'
+        #content = json.loads(serverContent)["entry"][0]["content"]
+        return serverContent
 
-    @route('/:id/:action')
-    @expose_page(must_login=True, methods=['POST'])
-    def save(self, id='', action='save', **kwargs):
+    @route('/:app/:id/:action')
+    @expose_page(must_login=True, methods=['POST', 'PUT'])
+    def save(self, app='', id='', action='save', **kwargs):
         '''Update an eventgen config'''
-        pass
+        session_key = cherrypy.session.get('sessionKey')
+        args = {}
+        args['output_mode'] = 'json'
+        serverResponse, serverContent = splunk.rest.simpleRequest('/services/eventgen/eventgen_conf/%s' % id, sessionKey=session_key, postargs=args)
+        cherrypy.response.headers['Content-Type'] = 'text/json'
+        #content = json.loads(serverContent)["entry"][0]["content"]
+        return serverContent
 
-    @route('/:id/:action')
+    @route('/:app/:id/:action')
     @expose_page(must_login=True, methods=['POST'])
-    def create(self, id='', action='get', **kwargs):
+    def create(self, app='', id='', action='create', **kwargs):
         '''Create a new eventgen config'''
-        pass
+        session_key = cherrypy.session.get('sessionKey')
+        args = kwargs
+        args['output_mode'] = 'json'
+        serverResponse, serverContent = splunk.rest.simpleRequest('/services/eventgen/eventgen_conf/%s' % id, sessionKey=session_key, postargs=args)
+        cherrypy.response.headers['Content-Type'] = 'text/json'
+        #content = json.loads(serverContent)["entry"][0]["content"]
+        return serverContent
 
-    @route('/:id/:action')
-    @expose_page(must_login=True, methods=['DELETE'])
-    def delete(self, id='', action='get', **kwargs):
+    @route('/:app/:id/:action=delete')
+    @expose_page(must_login=True, methods=['GET'])
+    def delete(self, app='', id='', action='delete', **kwargs):
         '''Delete an eventgen config'''
-        pass
+        session_key = cherrypy.session.get('sessionKey')
+        args = {}
+        args['output_mode'] = 'json'
+        serverResponse, serverContent = splunk.rest.simpleRequest('/services/eventgen/eventgen_conf/%s' % id, sessionKey=session_key, method='DELETE', getargs=args)
+        cherrypy.response.headers['Content-Type'] = 'text/json'
+        return serverContent
