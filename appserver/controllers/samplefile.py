@@ -82,12 +82,9 @@ def processFileUpload(f, app="", id=""):
     Process a file uploaded from the upload page
     """
     if not (isinstance(f, cgi.FieldStorage) and f.file):
-        open("/Users/gburgett/Desktop/test.txt", "a").write("bad data\n")
         return
-    open("/Users/gburgett/Desktop/test.txt", "a").write("processFileUpload\n")
     tfile = open(os.path.join(appsDir, app, "samples", id), "w+")
     shutil.copyfileobj(f.file, tfile)
-    open("/Users/gburgett/Desktop/test.txt", "a").write("File copied\n")
     tfile.close()
     return
 
@@ -163,17 +160,15 @@ class Samplefile(controllers.BaseController):
         return json.dumps({"Status": 200, "Message": "Results saved to file."})
 
     @route('/:app/:id/:action=_upload')
-    @expose_page(must_login=False, methods=['GET', 'POST'])
+    @expose_page(must_login=True, methods=['GET', 'POST'])
     def upload(self, app, id="", file=None, force=None, **kwargs):
         """
         Present a form for direct upload of an app
         """
         if file is not None and cherrypy.request.method == 'POST':
             cherrypy.response.headers['Content-Type'] = 'text/json'
-            open("/Users/gburgett/Desktop/test.txt", "a").write("Starting upload.\n")
             try:
                 processFileUpload(file, app=app, id=id)
-                open("/Users/gburgett/Desktop/test.txt", "a").write("It's done. Why doesn't it return?\n")
                 return json.dumps({"Status": 200, "Message": "File uploaded successfully."})
             except:
                 return json.dumps({"Status": 500, "Message": "File could not be uploaded."})
